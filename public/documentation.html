@@ -3,8 +3,93 @@
 <head>
     <title>K-Drama API Documentation</title>
 </head>
-<body>
-    <h1>Welcome to my K-Drama API</h1>
-    <p>It will have info on movie titles, genres, and release dates.</p>
+<body>    
+    <section>
+        <h1>K-Drama API Documentation</h1>
+    </section>
+    <section>
+        <table>
+            <tr>
+                <th>Business Logic</th>
+                <th>URL</th>
+                <th>HTTP Method</th>
+                <th>Query Parameters</th>
+                <th>Request body data format</th>
+                <th>Response body data format</th>
+            </tr>
+            <tr>
+                <td>Get list of all movies</td>
+                <td>/movies</td>
+                <td>GET</td>
+                <td>none</td>
+                <td>none</td>
+                <td>JSON movie array</td>
+            </tr>
+            <tr>
+                <td>Get data about a single movie by title</td>
+                <td>/movies/:title</td>
+                <td>GET</td>
+                <td>title (URL)</td>
+                <td>none</td>
+                <td>JSON object with single movie information</td>
+            </tr>
+            <tr>
+                <td>Get data about a genre by title</td>
+                <td>/genre/:name</td>
+                <td>GET</td>
+                <td>name (URL)</td>
+                <td>none</td>
+                <td>JSON object with genre name and description</td>
+            </tr>
+            <tr>
+                <td>Get data about a director by name</td>
+                <td>/director/:name</td>
+                <td>GET</td>
+                <td>name (URL)</td>
+                <td>none</td>
+                <td>JSON object with director name, bio, and birth year</td>
+            </tr>
+            <tr>
+                <td>Allow new users to register</td>
+                <td>/users</td>
+                <td>POST</td>
+                <td>username (URL)</td>
+                <td>none</td>
+                <td>JSON object with new user information</td>
+            </tr>
+            <tr>
+                <td>Allow users to update username</td>
+                <td>/users/:id</td>
+                <td>PUT</td>
+                <td>user id (URL)</td>
+                <td>JSON object with new username</td>
+                <td>Confirmation message</td>
+            </tr>
+            <tr>
+                <td>Allow users to add movie to their favorite list</td>
+                <td>/users/:id/:movieTitle</td>
+                <td>POST</td>
+                <td>user id (URL)</td>
+                <td>JSON object with new movieTitle</td>
+                <td>List of favorite movies updated</td>
+            </tr>
+            <tr>
+                <td>Allow users to remove a movie from their favorite list</td>
+                <td>/users/:id/:movieTitle</td>
+                <td>DELETE</td>
+                <td>user id, movieTitle</td>
+                <td>none</td>
+                <td>Confirmation message and list of favorite movies updated</td>
+            </tr>
+            <tr>
+                <td>Allow existing users to deregister</td>
+                <td>/users/:id</td>
+                <td>DELETE</td>
+                <td>user id (URL)</td>
+                <td>none</td>
+                <td>Confirmation message or error message</td>
+            </tr>
+        </table>
+    </section>
 </body>
 </html>
