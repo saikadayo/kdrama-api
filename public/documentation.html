@@ -53,39 +53,39 @@
                 <td>Allow new users to register</td>
                 <td>/users</td>
                 <td>POST</td>
-                <td>username (URL)</td>
                 <td>none</td>
-                <td>JSON object with new user information</td>
+                <td>JSON object with user info (Username, Password, Email, Birthday)</td>
+                <td>JSON object (created user)</td>
             </tr>
             <tr>
-                <td>Allow users to update username</td>
-                <td>/users/:id</td>
+                <td>Allow users to update their user info (username, password, email, date of birth)</td>
+                <td>/users/:Username</td>
                 <td>PUT</td>
-                <td>user id (URL)</td>
-                <td>JSON object with new username</td>
-                <td>Confirmation message</td>
+                <td>Username (URL)</td>
+                <td>JSON object with updated user info (Username, Password, Email, Birthday)</td>
+                <td>JSON object (updated user)</td>
             </tr>
             <tr>
                 <td>Allow users to add movie to their favorite list</td>
-                <td>/users/:id/:movieTitle</td>
+                <td>/users/:Username/movies/:MovieID</td>
                 <td>POST</td>
-                <td>user id (URL)</td>
-                <td>JSON object with new movieTitle</td>
-                <td>List of favorite movies updated</td>
+                <td>Username (URL), MovieID (URL)</td>
+                <td>none</td>
+                <td>JSON object (updated user with FavoriteMovies array)</td>
             </tr>
             <tr>
                 <td>Allow users to remove a movie from their favorite list</td>
-                <td>/users/:id/:movieTitle</td>
+                <td>/users/:Username/movies/:MovieID</td>
                 <td>DELETE</td>
-                <td>user id, movieTitle</td>
+                <td>Username (URL), MovieID (URL)</td>
                 <td>none</td>
-                <td>Confirmation message and list of favorite movies updated</td>
+                <td>JSON object (updated user with FavoriteMovies array)</td>
             </tr>
             <tr>
                 <td>Allow existing users to deregister</td>
-                <td>/users/:id</td>
+                <td>/users/:Username</td>
                 <td>DELETE</td>
-                <td>user id (URL)</td>
+                <td>Username (URL)</td>
                 <td>none</td>
                 <td>Confirmation message or error message</td>
             </tr>
