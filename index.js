@@ -13,6 +13,10 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
+
 let movies = [{
     title: 'Parasite',
     director: {
@@ -139,6 +143,7 @@ let users= [];
 
 app.use(morgan('combined'));
 app.use(bodyParser.json());
+app.use(passport.initialize());
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
@@ -152,12 +157,12 @@ app.get('/', (req, res) => {
 // });
 
 // Get the list of all movies
-app.get('/movies', (req, res) => {
+app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
   res.json(movies);
 });
 
 // Gets the data about a single movie
-app.get('/movies/:title', (req, res) => { 
+app.get('/movies/:title', passport.authenticate('jwt', { session: false }), (req, res) => { 
   const movie = movies.find((movie) => movie.title === req.params.title); 
   
   if (movie) { 
@@ -168,7 +173,7 @@ app.get('/movies/:title', (req, res) => {
 });
 
 // Get the data about a genre by name/title 
-app.get('/genre/:name', (req, res) => { 
+app.get('/genre/:name', passport.authenticate('jwt', { session: false }), (req, res) => { 
   const genre = movies.find((movie) => movie.genre.name.toLowerCase() === req.params.name.toLowerCase())?.genre; 
   
   if (genre) { 
@@ -179,7 +184,7 @@ app.get('/genre/:name', (req, res) => {
 }); 
 
 // Get the data about a director by name
-app.get('/director/:name', (req, res) => { 
+app.get('/director/:name', passport.authenticate('jwt', { session: false }), (req, res) => { 
   const director = movies.find((movie) => movie.director.name.toLowerCase() === req.params.name.toLowerCase())?.director; 
   
   if (director) { 
@@ -190,7 +195,7 @@ app.get('/director/:name', (req, res) => {
 });
 
 // Add a new movie to our list of movies
-app.post('/movies', (req, res) => {
+app.post('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
   let newMovie = req.body;
 
   if (!newMovie.title) {
@@ -204,7 +209,7 @@ app.post('/movies', (req, res) => {
 });
 
 // Delete a movie from our list by ID
-app.delete('/movies/:id', (req, res) => {
+app.delete('/movies/:id', passport.authenticate('jwt', { session: false }), (req, res) => {
   let movie = movies.find((movie) => { return movie.id === req.params.id });
 
   if (movie) {
@@ -235,7 +240,7 @@ app.post('/users', async (req, res) => {
 });
 
 // Get all users
-app.get('/users', async (req, res) => {
+app.get('/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
   await Users.find()
     .then((users) => {
       res.status(201).json(users);
@@ -247,7 +252,7 @@ app.get('/users', async (req, res) => {
 });
 
 // Get a user by username
-app.get('/users/:Username', async (req, res) => {
+app.get('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
   await Users.findOne({ Username: req.params.Username })
     .then((user) => {
       res.json(user);
@@ -259,8 +264,9 @@ app.get('/users/:Username', async (req, res) => {
 });
 
 // Allow users to update username
-app.put('/users/:Username', async (req, res) => {
+app.put('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
+    if (req.user.Username !== req.params.Username) return res.status(400).send('Permission denied');
     const updatedUser = await Users.findOneAndUpdate(
       { Username: req.params.Username },
       { $set: { Username: req.body.Username, Password: req.body.Password, Email: req.body.Email, Birthday: req.body.Birthday } },
@@ -274,8 +280,9 @@ app.put('/users/:Username', async (req, res) => {
 });
 
 // Allow users to add movie to their favorite list
-app.post('/users/:Username/movies/:MovieID', async (req, res) => {
+app.post('/users/:Username/movies/:MovieID', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
+    if (req.user.Username !== req.params.Username) return res.status(400).send('Permission denied');
     const updatedUser = await Users.findOneAndUpdate(
       { Username: req.params.Username },
       { $push: { FavoriteMovies: req.params.MovieID } },
@@ -289,8 +296,9 @@ app.post('/users/:Username/movies/:MovieID', async (req, res) => {
 });
 
 // Allow users to remove a movie from their favorite list
-app.delete('/users/:Username/movies/:MovieID', async (req, res) => {
+app.delete('/users/:Username/movies/:MovieID', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
+    if (req.user.Username !== req.params.Username) return res.status(400).send('Permission denied');
     const updatedUser = await Users.findOneAndUpdate(
       { Username: req.params.Username },
       { $pull: { FavoriteMovies: req.params.MovieID } },
@@ -304,8 +312,9 @@ app.delete('/users/:Username/movies/:MovieID', async (req, res) => {
 });
 
 // Allow existing users to deregister
-app.delete('/users/:Username', async (req, res) => {
+app.delete('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
+    if (req.user.Username !== req.params.Username) return res.status(400).send('Permission denied');
     const user = await Users.findOneAndDelete({ Username: req.params.Username });
     if (!user) return res.status(400).send(req.params.Username + ' was not found');
     res.status(200).send(req.params.Username + ' was deleted.');
@@ -328,13 +337,7 @@ app.delete('/users/:Username', async (req, res) => {
 // app.use(myLogger);
 // app.use(requestTime);
 
-app.get('/', (req, res) => {
-  let responseText = 'Welcome to my app!';
-  responseText += '<small>Requested at: ' + req.requestTime + '</small>';
-  res.send(responseText);
-});
-
-app.get('/secreturl', (req, res) => {
+app.get('/secreturl', passport.authenticate('jwt', { session: false }), (req, res) => {
   let responseText = 'This is a secret url with super top-secret content.';
   responseText += '<small>Requested at: ' + req.requestTime + '</small>';
   res.send(responseText);
