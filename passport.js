@@ -7,9 +7,9 @@ const Users = Models.User;
 // mongoose.connect('mongodb://localhost:27017/kdramaDB');
 mongoose.connect(process.env.CONNECTION_URI);
 
-const express = require("express");
-  bodyParser = require('body-parser'),
-  uuid = require('uuid');
+const express = require('express');
+const bodyParser = require('body-parser');
+const uuid = require('uuid');
 
 const { check, validationResult } = require('express-validator');
 
