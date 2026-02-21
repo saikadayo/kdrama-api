@@ -8,8 +8,8 @@ const Users = Models.User;
 mongoose.connect(process.env.CONNECTION_URI);
 
 const express = require("express");
-  bodyParser = require('body-parser'),
-  uuid = require('uuid');
+const bodyParser = require('body-parser');
+const uuid = require('uuid');
 
 const { check, validationResult } = require('express-validator');
 
@@ -31,9 +31,16 @@ app.use(cors({
   }
 }));
 
-let auth = require('./auth')(app);
 const passport = require('passport');
 require('./passport');
+
+app.use(morgan('combined'));
+
+app.use(bodyParser.json());
+
+app.use(passport.initialize());
+
+let auth = require('./auth')(app);
 
 let movies = [{
     title: 'Parasite',
@@ -159,9 +166,6 @@ let movies = [{
 
 let users= [];
 
-app.use(morgan('combined'));
-app.use(bodyParser.json());
-app.use(passport.initialize());
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
