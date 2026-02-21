@@ -26,6 +26,13 @@ let userSchema = mongoose.Schema({
 });
 
 // Hash password before saving
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.Password;
+    return ret;
+  }
+});
+
 userSchema.statics.hashPassword = (password) => {
   return bcrypt.hashSync(password, 10);
 };
