@@ -18,7 +18,11 @@ const morgan = require("morgan");
 
 const cors = require('cors');
 
-let allowedOrigins = ['http://localhost:8080', 'http://testsite.com'];
+let allowedOrigins = [
+  "http://localhost:1234",
+  "http://localhost:3000",
+  "http://localhost:8080"
+];
 
 app.use(cors({
   origin: (origin, callback) => {
