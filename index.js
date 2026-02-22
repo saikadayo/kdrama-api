@@ -7,21 +7,21 @@ const Users = Models.User;
 // mongoose.connect('mongodb://localhost:27017/kdramaDB');
 mongoose.connect(process.env.CONNECTION_URI);
 
-const express = require("express");
+const express = require('express');
 const bodyParser = require('body-parser');
 const uuid = require('uuid');
 
 const { check, validationResult } = require('express-validator');
 
 const app = express();
-const morgan = require("morgan");
+const morgan = require('morgan');
 
 const cors = require('cors');
 
 let allowedOrigins = [
-  "http://localhost:1234",
-  "http://localhost:3000",
-  "http://localhost:8080"
+  'http://localhost:1234',
+  'http://localhost:3000',
+  'http://localhost:8080'
 ];
 
 app.use(cors({
@@ -46,202 +46,109 @@ app.use(passport.initialize());
 
 let auth = require('./auth')(app);
 
-let movies = [{
-    title: 'Parasite',
-    director: {
-      name: 'Bong Joon Ho',
-      bio: 'He is a man who makes movies.',
-      birthYear: '1969'
-    },
-    genre: {
-      name: 'Thriller',
-      description: 'spooky movies'
-    }
-  },
-  {
-    title: 'Past Lives',
-    director: {
-      name: 'Celine Song',
-      bio: 'She makes romance movies.',
-      birthYear: '1988'
-    },
-    genre: {
-      name: 'Romance',
-      description: 'lovey dovey'
-    }
-  },
-  {
-    title: 'Mother',
-    director: {
-      name: 'Bong Joon Ho',
-      bio: 'He is a man who makes movies.',
-      birthYear: '1969'
-    },
-    genre: {
-      name: 'Horror',
-      description: 'terrifying things'
-    }
-  },
-  {
-    title: 'Sympathy for Mr. Vengeance',
-    director: {
-      name: 'Park Chan-wook',
-      bio: 'He makes horror and romance films.',
-      birthYear: '1963'
-    },
-    genre: {
-      name: 'Horror',
-      description: 'terrifying things'
-    }
-  },
-  {
-    title: 'Burning',
-    director: {
-      name: 'Lee Chang-Dong',
-      bio: 'He does suspense films.',
-      birthYear: '1954'
-    },
-    genre: {
-      name: 'Suspense',
-      description: 'puts you on the edge of your seat'
-    }
-  },
-  {
-    title: 'The Handmaiden',
-    director: {
-      name: 'Park Chan-wook',
-      bio: 'He makes horror and romance films.',
-      birthYear: '1963'
-    },
-    genre: {
-      name: 'Romance',
-      description: 'lovey dovey'
-    }
-  },
-  {
-    title: 'Castaway in the Moon',
-    director: {
-      name: 'Lee Hae-jun',
-      bio: 'She makes lovey dovey movies.',
-      birthYear: '1973'
-    },
-    genre: {
-      name: 'Romance',
-      description: 'lovey dovey'
-    }
-  },
-  {
-    title: '1987: When the Day Comes',
-    director: {
-      name: 'Jung Sung ho',
-      bio: 'He is a family man and makes family movies.',
-      birthYear: '1974'
-    },
-    genre: {
-      name: 'Drama',
-      description: 'all the tea'
-    }
-  },
-  {
-    title: 'Marathon',
-    director: {
-      name: 'Yoon-Chul Jung',
-      bio: 'He makes juicy drama films.',
-      birthYear: '1971'
-    },
-    genre: {
-      name: 'Drama',
-      description: 'all the tea'
-    }
-  },
-  {
-    title: 'Moonlit Winter',
-    director: {
-      name: 'Dae Hyung Lim',
-      bio: 'He makes some swoon-worthy movies.',
-      birthYear: '1986'
-    },
-    genre: {
-      name: 'Romance',
-      description: 'lovey dovey'
-    }
-  }
-];
-
-let users= [];
-
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
   res.send('Welcome to my Korean movie list!');
 });
 
-// app.get('/documentation', (req, res) => {
-//   res.sendFile('public/documentation.html', {
-//     root: __dirname
-//   });
-// });
-
-// Get the list of all movies
-app.get('/movies', (req, res) => {
-  res.json(movies);
+// Get the list of all movies (NOW FROM DB)
+app.get('/movies', async (req, res) => {
+  await Movies.find()
+    .then((movies) => {
+      res.status(200).json(movies);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Gets the data about a single movie
-app.get('/movies/:title', passport.authenticate('jwt', { session: false }), (req, res) => { 
-  const movie = movies.find((movie) => movie.title === req.params.title); 
-  
-  if (movie) { 
-    res.json(movie); 
-  } else { 
-    res.status(404).send('Movie not found.'); 
-  } 
+// Gets the data about a single movie (NOW FROM DB)
+app.get('/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => { 
+  await Movies.findOne({ Title: req.params.title })
+    .then((movie) => {
+      if (movie) {
+        res.status(200).json(movie);
+      } else {
+        res.status(404).send('Movie not found.'); 
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Get the data about a genre by name/title 
-app.get('/genre/:name', passport.authenticate('jwt', { session: false }), (req, res) => { 
-  const genre = movies.find((movie) => movie.genre.name.toLowerCase() === req.params.name.toLowerCase())?.genre; 
-  
-  if (genre) { 
-    res.json(genre); 
-  } else { 
-    res.status(400).send('Genre not found.'); 
-  } 
+// Get the data about a genre by name/title (NOW FROM DB)
+app.get('/genre/:name', passport.authenticate('jwt', { session: false }), async (req, res) => { 
+  await Movies.findOne({
+    'Genre.Name': { $regex: new RegExp('^' + req.params.name + '$', 'i') }
+  })
+    .then((movie) => {
+      if (movie && movie.Genre) {
+        res.status(200).json(movie.Genre);
+      } else {
+        res.status(400).send('Genre not found.'); 
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 }); 
 
-// Get the data about a director by name
-app.get('/director/:name', passport.authenticate('jwt', { session: false }), (req, res) => { 
-  const director = movies.find((movie) => movie.director.name.toLowerCase() === req.params.name.toLowerCase())?.director; 
-  
-  if (director) { 
-    res.json(director); 
-  } else { 
-    res.status(400).send('Director not found.'); 
-  } 
+// Get the data about a director by name (NOW FROM DB)
+app.get('/director/:name', passport.authenticate('jwt', { session: false }), async (req, res) => { 
+  await Movies.findOne({
+    'Director.Name': { $regex: new RegExp('^' + req.params.name + '$', 'i') }
+  })
+    .then((movie) => {
+      if (movie && movie.Director) {
+        res.status(200).json(movie.Director);
+      } else {
+        res.status(400).send('Director not found.'); 
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Add a new movie to our list of movies
-app.post('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+// Add a new movie to our list of movies (NOW TO DB)
+app.post('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
   let newMovie = req.body;
 
-  if (!newMovie.title) {
+  if (!newMovie.Title) {
     const message = 'Missing title in request body';
     res.status(400).send(message);
   } else {
-    newMovie.id = uuid.v4();
-    movies.push(newMovie);
-    res.status(201).send(newMovie);
+    await Movies.create(newMovie)
+      .then((movie) => {
+        res.status(201).json(movie);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send('Error: ' + error);
+      });
   }
 });
 
-// Delete a movie from our list by ID
-app.delete('/movies/:id', passport.authenticate('jwt', { session: false }), (req, res) => {
-  let movie = movies.find((movie) => { return movie.id === req.params.id });
-
-  if (movie) {
-    movies = movies.filter((obj) => { return obj.id !== req.params.id });
-    res.status(201).send('Movie ' + req.params.id + ' was deleted.');
-  }
+// Delete a movie from our list by ID (NOW FROM DB)
+app.delete('/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  await Movies.findByIdAndDelete(req.params.id)
+    .then((movie) => {
+      if (movie) {
+        res.status(201).send('Movie ' + req.params.id + ' was deleted.');
+      } else {
+        res.status(404).send('Movie not found.');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
 app.post('/users',
@@ -385,19 +292,6 @@ app.delete('/users/:Username', passport.authenticate('jwt', { session: false }),
       res.status(500).send('Error: ' + err);
     });
 });
-
-// let myLogger = (req, res, next) => {
-//   console.log(req.url);
-//   next();
-// };
-
-// let requestTime = (req, res, next) => {
-//  req.requestTime = Date.now();
-//  next();
-// };
-
-// app.use(myLogger);
-// app.use(requestTime);
 
 app.get('/secreturl', passport.authenticate('jwt', { session: false }), (req, res) => {
   let responseText = 'This is a secret url with super top-secret content.';
